@@ -53,7 +53,7 @@ def spotify_recent_songs():
         return artists
 
     @task()
-    def extract_genres(artists: []):
+    def extract_genres(artists: list):
         from glom import glom
         spec = [{'name': 'genres'}]
         genres = glom(artists, spec)
@@ -92,16 +92,28 @@ def spotify_recent_songs():
         return songs
 
     @task()
-    def save_songs(songs: dict):
+    def save_songs(songs: list):
         """Save song data into Mongo"""
         from helpers.mongo_helpers import save_data
         save_data(songs, 'recent_songs')
     
     @task()
-    def save_albums(albums: dict):
+    def save_albums(albums: list):
         """Save album data into Mongo"""
         from helpers.mongo_helpers import save_data
         save_data(albums, 'recent_albums')
+    
+    @task()
+    def save_artists(artists: list):
+        """Save artist data into Mongo"""
+        from helpers.mongo_helpers import save_data
+        save_data(artists, 'recent_artists')
+
+    @task()
+    def save_genres(genres: list):
+        """Save genre data into Mongo"""
+        from helpers.mongo_helpers import save_data
+        save_data(genres, 'recent_genres')
 
     data = get_recent_songs()
 
