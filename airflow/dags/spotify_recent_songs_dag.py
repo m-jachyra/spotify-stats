@@ -35,7 +35,10 @@ def spotify_recent_songs():
         spec = ('items', [{
             'id': ('track.album', 'id'),
             'name': ('track.album', 'name'),
-            'artists': ('track.album.artists', ['name']),
+            'artists': ('track.artists', [{
+                'id': 'id',
+                'name': 'name',
+            }]),
             'release_date': ('track.album', 'release_date'),
             'total_tracks': ('track.album', 'total_tracks'),
         }])
@@ -51,7 +54,10 @@ def spotify_recent_songs():
         spec = ('items', [{
             'id': ('track', 'id'),
             'name': ('track', 'name'),
-            'artists': ('track.artists', ['name']),
+            'artists': ('track.artists', [{
+                'id': 'id',
+                'name': 'name',
+            }]),
             'duration': ('track', 'duration_ms'),
             'popularity': ('track', 'popularity'),
         }])
