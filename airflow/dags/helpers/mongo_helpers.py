@@ -8,3 +8,11 @@ def get_database():
     client = MongoClient(CONNECTION_STRING)
 
     return client['spotify']
+
+def save_data(data: dict, container_name: str):
+        from pymongo import MongoClient
+        import pymongo
+
+        db = get_database()
+        container = db[container_name]
+        container.insert_many(data)

@@ -13,19 +13,31 @@ def spotify_recent_songs():
     @task()
     def get_recent_songs():
         """Get recently played songs from spotify API"""
-        import requests
-        from helpers.spotify_helpers import refresh_token
+        from helpers.spotify_helpers import get_request
 
-        response = requests.get(
-            'https://api.spotify.com/v1/me/player/recently-played',
-            headers={
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {refresh_token()}',
-            },
+        response = get_request('https://api.spotify.com/v1/me/player/recently-played', {})
+
+        return response
+
+    @task()
+    def get_artists_data(data: dict):
+        """Get artist data"""
+        from helpers.spotify_helpers import get_request
+        from glom import glom
+        spec = ('items', [('track.artists', ['id'])])
+
+        artists_list = glom(data, spec)
+        artists_list = [artist for artists in artists_list for artist in artists]
+        id_string = ','.join([artist for artist in artists_list])
+
+        response = get_request(
+            'https://api.spotify.com/v1/artists', 
+            {
+                    'ids': id_string,
+            }
         )
 
-        return response.json()
+        return response
 
     @task()
     def extract_albums(data: dict):
@@ -35,10 +47,7 @@ def spotify_recent_songs():
         spec = ('items', [{
             'id': ('track.album', 'id'),
             'name': ('track.album', 'name'),
-            'artists': ('track.artists', [{
-                'id': 'id',
-                'name': 'name',
-            }]),
+            'artists': ('track.artists', ['id']),
             'release_date': ('track.album', 'release_date'),
             'total_tracks': ('track.album', 'total_tracks'),
         }])
@@ -54,10 +63,7 @@ def spotify_recent_songs():
         spec = ('items', [{
             'id': ('track', 'id'),
             'name': ('track', 'name'),
-            'artists': ('track.artists', [{
-                'id': 'id',
-                'name': 'name',
-            }]),
+            'artists': ('track.artists', ['id']),
             'duration': ('track', 'duration_ms'),
             'popularity': ('track', 'popularity'),
         }])
@@ -68,24 +74,14 @@ def spotify_recent_songs():
     @task()
     def save_songs(songs: dict):
         """Save song data into Mongo"""
-        from helpers.mongo_helpers import get_database
-        from pymongo import MongoClient
-        import pymongo
-
-        spotify_db = get_database()
-        recent_songs = spotify_db['recent_songs']
-        recent_songs.insert_many(songs)
+        from helpers.mongo_helpers import save_data
+        save_data(songs, 'recent_songs')
     
     @task()
     def save_albums(albums: dict):
         """Save album data into Mongo"""
-        from helpers.mongo_helpers import get_database
-        from pymongo import MongoClient
-        import pymongo
-
-        spotify_db = get_database()
-        recent_albums = spotify_db['recent_albums']
-        recent_albums.insert_many(albums)
+        from helpers.mongo_helpers import save_data
+        save_data(albums, 'recent_albums')
 
     data = get_recent_songs()
 
@@ -94,5 +90,7 @@ def spotify_recent_songs():
 
     albums = extract_albums(data)
     save_albums(albums)
+
+    artists = get_artists_data(data)
 
 spotify_recent_songs_dag = spotify_recent_songs()

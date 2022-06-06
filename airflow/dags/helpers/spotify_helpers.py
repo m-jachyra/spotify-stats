@@ -18,3 +18,19 @@ def refresh_token():
         }
     )
     return response.json()['access_token']
+
+def get_request(uri: str, params: dict):
+    """Get recently played songs from spotify API"""
+    import requests
+
+    response = requests.get(
+        uri,
+        headers={
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {refresh_token()}',
+        },
+        params=params,
+    )
+
+    return response.json()
