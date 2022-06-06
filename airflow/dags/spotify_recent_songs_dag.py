@@ -9,8 +9,10 @@ from airflow.decorators import dag, task
     tags=['testy'],
 )
 def spotify_recent_songs():
+    """DAG for fetching data about recently played songs from Spotify API"""
     @task()
     def get_recent_songs():
+        """Get recently played songs from spotify API"""
         import requests
         from helpers.spotify_helpers import refresh_token
 
@@ -27,6 +29,7 @@ def spotify_recent_songs():
 
     @task()
     def extract_albums(data: dict):
+        """Extract album data from API response"""
         from glom import glom
 
         spec = ('items', [{
@@ -42,6 +45,7 @@ def spotify_recent_songs():
     
     @task()
     def extract_songs(data: dict):
+        """Extract song data from API response"""
         from glom import glom
 
         spec = ('items', [{
@@ -57,6 +61,7 @@ def spotify_recent_songs():
 
     @task()
     def save_songs(songs: dict):
+        """Save song data into Mongo"""
         from helpers.mongo_helpers import get_database
         from pymongo import MongoClient
         import pymongo
@@ -67,6 +72,7 @@ def spotify_recent_songs():
     
     @task()
     def save_albums(albums: dict):
+        """Save album data into Mongo"""
         from helpers.mongo_helpers import get_database
         from pymongo import MongoClient
         import pymongo
