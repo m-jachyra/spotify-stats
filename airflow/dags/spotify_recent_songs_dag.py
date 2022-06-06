@@ -26,6 +26,21 @@ def spotify_recent_songs():
         return response.json()
 
     @task()
+    def extract_albums(data: dict):
+        from glom import glom
+
+        spec = ('items', [{
+            'id': ('track.album', 'id'),
+            'name': ('track.album', 'name'),
+            'artists': ('track.album.artists', ['name']),
+            'release_date': ('track.album', 'release_date'),
+            'total_tracks': ('track.album', 'total_tracks'),
+        }])
+
+        albums = glom(data, spec)
+        return albums
+    
+    @task()
     def extract_songs(data: dict):
         from glom import glom
 
@@ -49,9 +64,23 @@ def spotify_recent_songs():
         spotify_db = get_database()
         recent_songs = spotify_db['recent_songs']
         recent_songs.insert_many(songs)
+    
+    @task()
+    def save_albums(albums: dict):
+        from helpers.mongo_helpers import get_database
+        from pymongo import MongoClient
+        import pymongo
+
+        spotify_db = get_database()
+        recent_albums = spotify_db['recent_albums']
+        recent_albums.insert_many(albums)
 
     data = get_recent_songs()
+
     songs = extract_songs(data)
     save_songs(songs)
+
+    albums = extract_albums(data)
+    save_albums(albums)
 
 spotify_recent_songs_dag = spotify_recent_songs()
