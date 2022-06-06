@@ -40,6 +40,26 @@ def spotify_recent_songs():
         return response
 
     @task()
+    def extract_artists(data: dict):
+        from glom import glom
+        spec = ('artists', [{
+            'id': 'id',
+            'name': 'name',
+            'genres': 'genres',
+            'popularity': 'popularity',
+        }])
+
+        artists = glom(data, spec)
+        return artists
+
+    @task()
+    def extract_genres(artists: []):
+        from glom import glom
+        spec = [{'name': 'genres'}]
+        genres = glom(artists, spec)
+        return genres
+
+    @task()
     def extract_albums(data: dict):
         """Extract album data from API response"""
         from glom import glom
@@ -92,5 +112,8 @@ def spotify_recent_songs():
     save_albums(albums)
 
     artists = get_artists_data(data)
+    artists = extract_artists(artists)
+
+    genres = extract_genres(artists)
 
 spotify_recent_songs_dag = spotify_recent_songs()
