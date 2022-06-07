@@ -59,6 +59,9 @@ x-airflow-common:
     AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    AIRFLOW_VENV_CLIENT_ID: '${CLIENT_ID}'
+    AIRFLOW_VENV_CLIENT_SECRET: '${CLIENT_SECRET}'
+    AIRFLOW_VENV_REFRESH_TOKEN: '${REFRESH_TOKEN}'
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
