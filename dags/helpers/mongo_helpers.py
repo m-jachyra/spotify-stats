@@ -15,4 +15,7 @@ def save_data(data: dict, container_name: str):
 
         db = get_database()
         container = db[container_name]
-        container.insert_many(data)
+        if type(data) == list:
+            container.insert_many(data)
+        elif type(data) == dict:
+            container.insert_one(data)

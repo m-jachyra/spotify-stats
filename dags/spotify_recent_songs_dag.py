@@ -3,10 +3,10 @@ import json
 from airflow.decorators import dag, task
 
 @dag(
-    schedule_interval=None,
+    schedule_interval='@daily',
     start_date=pendulum.datetime(2022, 6, 1, tz='UTC'),
     catchup=False,
-    tags=['testy'],
+    tags=['Spotify'],
 )
 def spotify_recent_songs():
     """DAG for fetching data about recently played songs from Spotify API"""
@@ -41,6 +41,7 @@ def spotify_recent_songs():
 
     @task()
     def extract_artists(data: dict):
+        """Extract artist data from API response"""
         from glom import glom
         spec = ('artists', [{
             'id': 'id',
@@ -54,6 +55,7 @@ def spotify_recent_songs():
 
     @task()
     def extract_genres(artists: list):
+        """Extract genre data from artists"""
         from glom import glom
         spec = [{'name': 'genres'}]
         genres = glom(artists, spec)
@@ -90,6 +92,24 @@ def spotify_recent_songs():
 
         songs = glom(data, spec)
         return songs
+    
+    @task()
+    def compute_stats(songs: list):
+        """Compute daily song stats"""
+        from glom import glom
+        song_count = len(songs)
+
+        spec = ['duration']
+        durations = glom(songs, spec)
+        total_duration = sum(durations)
+
+        stats = {
+            'date': str(pendulum.now('Europe/Warsaw'))[:10],
+            'song_count': song_count,
+            'total_duration': total_duration,
+        }
+
+        return stats
 
     @task()
     def save_songs(songs: list):
@@ -115,6 +135,12 @@ def spotify_recent_songs():
         from helpers.mongo_helpers import save_data
         save_data(genres, 'recent_genres')
 
+    @task()
+    def save_stats(stats: dict):
+        """Save stas data into Mongo"""
+        from helpers.mongo_helpers import save_data
+        save_data(stats, 'stats')
+
     data = get_recent_songs()
 
     songs = extract_songs(data)
@@ -125,7 +151,12 @@ def spotify_recent_songs():
 
     artists = get_artists_data(data)
     artists = extract_artists(artists)
+    save_artists(artists)
 
     genres = extract_genres(artists)
+    save_genres(genres)
+
+    stats = compute_stats(songs)
+    save_stats(stats)
 
 spotify_recent_songs_dag = spotify_recent_songs()
