@@ -11,8 +11,8 @@ potrzebne są do poprawnego łaczenia się z API Spotify.
 ```
 echo -e "AIRFLOW_UID=$(id -u)" > .env
 echo "CLIENT_ID=YOUR_CLIENT_ID" > .env
-echo -e "CLIENT_SECRET=YOUR_CLIENT_SECRET" > .env
-echo -e "REFRESH_TOKEN=YOUR_REFRESH_TOKEN" > .env
+echo "CLIENT_SECRET=YOUR_CLIENT_SECRET" > .env
+echo "REFRESH_TOKEN=YOUR_REFRESH_TOKEN" > .env
 ```
 Aby wykonać migrację bazy danych i utworzyć pierwszego użytkownika korzystamy z polecenia:
 ```
