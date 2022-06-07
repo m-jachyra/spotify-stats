@@ -9,7 +9,7 @@ def get_database():
 
     return client['spotify']
 
-def save_data(data: dict, container_name: str):
+def save_data(data, container_name: str):
         from pymongo import MongoClient
         import pymongo
 
